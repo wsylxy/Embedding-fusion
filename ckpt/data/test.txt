@@ -1,0 +1,3 @@
+q1abcd $pi$ $vert$ $\\$ $a$	11 $[$ \frac { b } b = \frac { a } 2	p1abcd $pi$ $vert$ $\\$ $a$	21 $[$ \frac { b } b = \frac { a }	n1abcd $pi$ $vert$ $\\$ $a$	31 $[$ \frac { b } b = \frac { a }
+q2abcd $pi$ $vert$ $\\$ $a$	12 $[$ \frac { b } b = \frac { a }	p2abcd $pi$ $vert$ $\\$ $a$	22 $[$ \frac { b } b = \frac { a } 1	n2abcd $pi$ $vert$ $\\$ $a$	32 $[$ \frac { b } b = \frac { a }
+q3abcd $pi$ $vert$ $\\$ $a$	13 $[$ \frac { b } b = \frac { a }	p3abcd $pi$ $vert$ $\\$ $a$	23 $[$ \frac { b } b = \frac { a }	n3abcd $pi$ $vert$ $\\$ $a$	33 $[$ \frac { b } b = \frac { a } 3
