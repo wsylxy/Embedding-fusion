@@ -5,15 +5,18 @@ import torch
 
 
 class Tokenizer:
-    def __init__(self, file_path: str) -> None:
+    def __init__(self, file_path: str, mode='fuse') -> None:
         self.soe = "SOE"
         self.eoe = "EOE"
         self.pad = "PAD"
         self.Q = "[Q]"
         self.D = "[D]"
-
-        self.vocabs = [self.pad, self.soe]
-        # self.vocabs = [self.pad, self.soe, self.Q, self.D]
+        self.longest_len = 256
+        self.mode = mode
+        if self.mode == 'fuse':
+            self.vocabs = [self.pad, self.soe]
+        elif self.mode == 'transformer' or self.mode == 'fuse_maxsim':
+            self.vocabs = [self.pad, self.soe, self.Q, self.D]
         file = open(file=file_path, mode='r', encoding='utf-8')
         for line in file:
             self.vocabs.append(line.strip('\n').split('\t')[0])
@@ -28,7 +31,11 @@ class Tokenizer:
     def encode(self, expr: str) -> Tensor:
         tokens = []
         # print(expr)
-        for word in expr.split(sep=' '):
+        expr = expr.split(sep=' ')
+        # if self.mode == 'transformer':
+        if len(expr)>self.longest_len:
+            expr = expr[:self.longest_len]
+        for word in expr:
             try:
                 tokens.append(self.word2idx[word])
             except:

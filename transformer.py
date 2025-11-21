@@ -309,7 +309,7 @@ class Transformer(nn.Module):
     ) -> Tensor:
         # [B, S] -> [B, S, D]
         h = self.tok_embeddings(tokens)
-        print("token emb", h.dtype)
+        # print("token emb", h.dtype)
         pos_ids = torch.arange(
             start=0, end=h.shape[1], dtype=h.dtype, device=h.device
         ).unsqueeze(dim=0)
@@ -318,7 +318,7 @@ class Transformer(nn.Module):
         for layer in self.layers:
             h = layer(x=h, mask=mask, pos_emb=freq_cis, cache_pos=cache_pos)
         h = self.norm(h)
-        print("output emb", h.dtype)
+        # print("output emb", h.dtype)
         # TODO
         # output = self.output(h).float()
 

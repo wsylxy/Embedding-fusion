@@ -135,6 +135,7 @@ _C.DATA.ARQMATH = None
 _C.DATA.MATH = None
 _C.DATA.N_EXPRS = None
 _C.DATA.VOCAB_FILE = "data/vocabs.txt"
+_C.DATA.TOK_MODE = 'fuse'
 
 
 # -----------------------------------------------------------------------------

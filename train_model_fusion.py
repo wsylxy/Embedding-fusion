@@ -45,7 +45,7 @@ def main() -> None:
         'additional_special_tokens': ['[unused0]', '[unused1]']
     })
     """formula tokenizer"""
-    tokenizer_formula = Tokenizer(file_path=cfg.DATA.VOCAB_FILE)
+    tokenizer_formula = Tokenizer(file_path=cfg.DATA.VOCAB_FILE, mode=cfg.DATA.TOK.MODE)
 
     # dataset
     dataset = FuseData(

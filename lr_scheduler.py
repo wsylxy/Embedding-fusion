@@ -69,7 +69,8 @@ class LinearLRScheduler(Scheduler):
 
 def build_scheduler(cfg, optimizer: optim.Optimizer) -> Scheduler:
     n_steps = int(cfg.TRAIN.N_ITER_PER_EPOCH * cfg.TRAIN.N_EPOCHS)
-    warmup_steps = int(cfg.TRAIN.N_ITER_PER_EPOCH * cfg.TRAIN.WARMUP_EPOCHS)
+    # warmup_steps = int(cfg.TRAIN.N_ITER_PER_EPOCH * cfg.TRAIN.WARMUP_EPOCHS)
+    warmup_steps = 70
     decay_steps = int(cfg.TRAIN.N_ITER_PER_EPOCH * cfg.TRAIN.DECAY_EPOCHS)
 
     name = cfg.LRS.NAME.lower()

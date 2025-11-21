@@ -22,14 +22,12 @@ class Math_enc_dataset_old(Dataset):
         self.maxline = 6
         file = open(file=file_path, mode='r', encoding='utf-8')
         for i, line in enumerate(file):
-            if self.maxline and i>=self.maxline:
-                break
-            expr = line.strip().split(sep='\t')[:3]
+            expr = line.strip().split(sep='\t')
             expr[0] = f"[Q] {expr[0]}"
             expr[1] = f"[D] {expr[1]}"
             expr[2] = f"[D] {expr[2]}"
-            # expr[3] = f"[D] {expr[3]}"
-            # expr[4] = f"[D] {expr[4]}"
+            expr[3] = f"[D] {expr[3]}"
+            expr[4] = f"[D] {expr[4]}"
             self.exprs.append(expr)
             # print(expr)
         file.close()
@@ -53,6 +51,7 @@ class Math_enc_dataset_old(Dataset):
             batch_first=True,
             padding_value=self.tokenizer.word2idx["PAD"],
         )
+        # print("src", src.shape)
         # https://gmongaras.medium.com/how-do-self-attention-masks-work-72ed9382510f
         # [batch_size, n_heads, 1, seq_len]
         src_mask = torch.eq(input=src, other=self.tokenizer.word2idx["PAD"]) \
@@ -62,7 +61,7 @@ class Math_enc_dataset_old(Dataset):
 
 @register_dataset(name="math_enc_old")
 def build_dataset(cfg) -> Dataset:
-    tokenizer = Tokenizer(file_path=cfg.DATA.VOCAB_FILE)
+    tokenizer = Tokenizer(file_path=cfg.DATA.VOCAB_FILE, mode='transformer')
     return Math_enc_dataset_old(
         file_path=cfg.DATA.MATH,
         tokenizer=tokenizer,

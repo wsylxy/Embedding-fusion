@@ -24,39 +24,53 @@ def compute_loss(
 ) -> float:
     _, tL, tD = text_embs.size()
     _, fL, fD = formula_embs.size()
+    # print('text_embs.shape', text_embs.shape)
+    # print('formula_embs.shape', formula_embs.shape)
     assert text_embs.shape[0]==formula_embs.shape[0]
     
     #find q, pos, neg of text
     text_embs = text_embs.view(-1, n_exprs, tL, tD)
     text_attn_mask = text_attn_mask.view(-1, n_exprs, tL)
+    B = text_embs.shape[0]
     text_q = text_embs[:, 0, :, :]
     text_pos = text_embs[:, 1, :, :]
-    text_neg = text_embs[:, 2, :, :]
+    text_neg = text_embs[:, 2:, :, :]
+    text_neg = text_neg.reshape(-1, tL, tD)
+    # print('text_neg.shape', text_neg.shape)
     text_q_mask = text_attn_mask[:, 0, :]
     text_pos_mask = text_attn_mask[:, 1, :]
-    text_neg_mask = text_attn_mask[:, 2, :]
-    
+    text_neg_mask = text_attn_mask[:, 2:, :]
+    text_neg_mask = text_neg_mask.reshape(-1, tL)
+    # print('text_neg_mask.shape', text_neg_mask.shape)
     #find q, pos, neg of formula
     formula_embs = formula_embs.view(-1, n_exprs, fL, fD)
     formula_attn_mask = formula_attn_mask.view(-1, n_exprs, fL)
     formula_q = formula_embs[:, 0, :, :]
     formula_pos = formula_embs[:, 1, :, :]
-    formula_neg = formula_embs[:, 2, :, :]
+    formula_neg = formula_embs[:, 2:, :, :]
+    formula_neg = formula_neg.reshape(-1, fL, fD)
+    # print('formula_neg.shape', formula_neg.shape)
     formula_q_mask = formula_attn_mask[:, 0, :]
     formula_pos_mask = formula_attn_mask[:, 1, :]
-    formula_neg_mask = formula_attn_mask[:, 2, :]
-    print(text_q.dtype)
-    print(formula_q.dtype)
-    fused_q = model_fuse(H_t=text_q, H_m=formula_q, mask_t=text_q_mask, mask_m=formula_q_mask, normalize=True)
-    mask_q = torch.cat((text_q_mask, formula_q_mask), dim=1)
+    formula_neg_mask = formula_attn_mask[:, 2:, :]
+    formula_neg_mask = formula_neg_mask.reshape(-1, fL)
+    # print('formula_neg_mask.shape', formula_neg_mask.shape)
+    # print(text_q.dtype)
+    # print(formula_q.dtype)
+    # print('text shape:', text_q.shape)
+    # print('formula shape:', formula_q.shape)
+    fused_q, mask_q = model_fuse(H_t=text_q, H_m=formula_q, mask_t=text_q_mask, mask_m=formula_q_mask, normalize=True)
+    # mask_q = torch.cat((text_q_mask, formula_q_mask), dim=1)
     assert fused_q.size(1) == mask_q.size(1)
     # print("text_q mask:", text_q)
     # print("formula_pos mask shape:", formula_pos.shape)
     assert fused_q.shape[0] == mask_q.shape[0]
-    fused_pos = model_fuse(H_t=text_pos, H_m=formula_pos, mask_t=text_pos_mask, mask_m=formula_pos_mask, normalize=True)
-    print("text_pos mask shape:", text_pos.shape)
-    print("formula_pos mask shape:", formula_pos.shape)
-    mask_pos = torch.cat((text_pos_mask, formula_pos_mask), dim=1)
+    # print('text shape:', text_pos.shape)
+    # print('formula shape:', formula_pos.shape)
+    fused_pos, mask_pos = model_fuse(H_t=text_pos, H_m=formula_pos, mask_t=text_pos_mask, mask_m=formula_pos_mask, normalize=True)
+    # print("text_pos mask shape:", text_pos.shape)
+    # print("formula_pos mask shape:", formula_pos.shape)
+    # mask_pos = torch.cat((text_pos_mask, formula_pos_mask), dim=1)
     assert fused_pos.size(1) == mask_pos.size(1)
     # print("cat mask:", mask_pos)
     # print("cat mask shape:", mask_pos.shape)
@@ -64,8 +78,15 @@ def compute_loss(
     # print("text_neg shape:", text_neg.shape)
     # print("formula_neg shape:", formula_neg.shape)
     # print("formula_neg_mask shape", formula_neg_mask.shape)
-    fused_neg = model_fuse(H_t=text_neg, H_m=formula_neg, mask_t=text_neg_mask, mask_m=formula_neg_mask, normalize=True)
-    mask_neg = torch.cat((text_neg_mask, formula_neg_mask), dim=1)
+    # print('text shape:', text_neg.shape)
+    # print('formula shape:', formula_neg.shape)
+    fused_neg, mask_neg = model_fuse(H_t=text_neg, H_m=formula_neg, mask_t=text_neg_mask, mask_m=formula_neg_mask, normalize=True)
+    _, L, D = fused_neg.size()
+    fused_neg = fused_neg.reshape(B, -1, L, D)          # [B, N, L, D]
+    mask_neg  = mask_neg.reshape(B, -1, L)              # [B, N, L]
+    # print('fused_neg.shape', fused_neg.shape)
+    # print('mask_neg.shape', mask_neg.shape)
+    # mask_neg = torch.cat((text_neg_mask, formula_neg_mask), dim=1)
     assert fused_neg.size(1) == mask_neg.size(1)
     assert fused_neg.shape[0] == mask_neg.shape[0]
     return criterion(
@@ -111,7 +132,10 @@ def train_epoch(
         text_attn_mask = batch["text"]["attention_mask"].to(device=device)
         formula_token_ids = batch["formula"]["src"].to(device=device)
         formula_attn_mask = batch["formula"]["src_mask"].to(device=device)
-
+        # print('text_attn_mask.shape', text_attn_mask.shape)
+        # print('text_attn_mask', text_attn_mask)
+        # print('formula_attn_mask.shape', formula_attn_mask.shape)
+        # print('formula_attn_mask', formula_attn_mask)
         optimizer.zero_grad()
         query_ids = torch.arange(
             start=0, end=text_token_ids.size(dim=0), step=n_exprs
@@ -121,7 +145,7 @@ def train_epoch(
         query[query == 0] = 103
         text_token_ids[query_ids] = query
         query_mask = text_attn_mask[query_ids]
-        query_mask[query_mask == 0] = 1
+        # query_mask[query_mask == 0] = 1
         text_attn_mask[query_ids] = query_mask
         with torch.no_grad():
             text_embs = model_text(token_ids=text_token_ids, attn_mask=text_attn_mask)
@@ -134,7 +158,7 @@ def train_epoch(
         text_attn_mask = text_attn_mask & punct_mask
         with torch.no_grad():
             formula_embs = model_formula(tokens=formula_token_ids, mask=formula_attn_mask, cache_pos=None)
-        print(formula_embs.dtype)
+        # print(formula_embs.dtype)
         formula_attn_mask = formula_attn_mask.squeeze(dim=(-3, -2)) # [B, 1, 1, L] -> [B, L]
         n_pad = formula_attn_mask.int().sum(dim=-1)
         eoe_ids = formula_attn_mask.size(dim=-1) - n_pad - 1
@@ -143,9 +167,9 @@ def train_epoch(
         )
         formula_attn_mask[batch_ids, eoe_ids] = True
         formula_attn_mask[:, 0] = True
-        formula_embs[formula_attn_mask] = 0 # pad is true in this mask
+        # formula_embs[formula_attn_mask] = 0 # pad is true in this mask
         formula_attn_mask = (~formula_attn_mask).long()    # inverse valid token and pad, valid token is true now
-        print("new formula mask", formula_attn_mask)
+        # print("new formula mask", formula_attn_mask)
         # fused_emb = model_fuse(H_t=text_embs, H_m=formula_embs, mask_t=text_attn_mask, mask_m=formula_attn_mask, normalize=True)
 
         loss = compute_loss(
@@ -228,7 +252,7 @@ def train_model(
     # log_info(f"Total trainable parameters {params * 1e-6:.4f}M")
     model_formula.to(device=device)
     ckpt_formula_old = torch.load(f=ckpt_formula, map_location=device)
-    missing_keys, unexpected_keys = model_formula.load_state_dict(state_dict=ckpt_formula_old["model_state"], strict=False)
+    missing_keys, unexpected_keys = model_formula.load_state_dict(state_dict=ckpt_formula_old["model_state_dict"], strict=False)
     model_formula.eval()
     print(f"Missing keys in formula ckpt: {missing_keys}")
     print(f"Unexpected keys in formula ckpt: {unexpected_keys}")
@@ -242,16 +266,16 @@ def train_model(
     init_batch = 0
 
     if os.path.exists(path=ckpt_fuse):
-        ckpt_path = ckpt_fuse
-        ckpt_fuse = torch.load(f=ckpt_fuse, map_location=device)
-        model_fuse.load_state_dict(state_dict=ckpt_fuse["model_state_dict"])
-        optimizer.load_state_dict(state_dict=ckpt_fuse["optimizer_state_dict"])
-        lr_scheduler.load_state_dict(state_dict=ckpt_fuse["lr_scheduler_state_dict"])
-        init_batch = ckpt_fuse["batch"]+1
+        # ckpt_path = ckpt_fuse
+        ckpt_fuse_model = torch.load(f=ckpt_fuse, map_location=device)
+        model_fuse.load_state_dict(state_dict=ckpt_fuse_model["model_state_dict"])
+        optimizer.load_state_dict(state_dict=ckpt_fuse_model["optimizer_state_dict"])
+        lr_scheduler.load_state_dict(state_dict=ckpt_fuse_model["lr_scheduler_state_dict"])
+        init_batch = ckpt_fuse_model["batch"]+1
         print("init batch is:", init_batch)
-        init_epoch = ckpt_fuse["epoch"]+1 if init_batch == 0 else ckpt_fuse["epoch"]
-        print("loss:", ckpt_fuse["loss"])
-        filename = os.path.basename(p=ckpt_path)
+        init_epoch = ckpt_fuse_model["epoch"]+1 if init_batch == 0 else ckpt_fuse_model["epoch"]
+        print("loss:", ckpt_fuse_model["loss"])
+        filename = os.path.basename(p=ckpt_fuse)
         log_info(f"Loaded `{filename}`")
 
     epoch_tqdm = tqdm(
@@ -290,7 +314,7 @@ def train_model(
 
         torch.save(
             {
-                "model_state_dict": model_text.state_dict(),
+                "model_state_dict": model_fuse.state_dict(),
                 "optimizer_state_dict": optimizer.state_dict(),
                 "lr_scheduler_state": lr_scheduler.state_dict(),
                 "epoch": epoch,
