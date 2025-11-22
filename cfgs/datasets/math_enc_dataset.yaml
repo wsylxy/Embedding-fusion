@@ -1,7 +1,8 @@
 DATA:
   NAME: "math_enc_old"
-  # MATH: "/projects/illinois/eng/ece/kani/user/suyuan2/data/train_set_formula_v2.txt"
+    #MATH: "/projects/illinois/eng/ece/kani/user/suyuan2/data/train_set_longerthan15.txt"
   # MATH: "/mnt/d/data_process/train_set_14M.txt"
-  MATH: "ckpt/data/test.txt"
-  N_EXPRS: 3
+  MATH: "ckpt/data/train_set_fusion_all_formulas_tag.txt"
+  N_EXPRS: 5
   VOCAB_FILE:  "data/vocabs.txt"
+  TOK_MODE: "fuse_maxsim"

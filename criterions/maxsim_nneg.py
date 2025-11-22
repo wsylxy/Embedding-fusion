@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from criterions.registry import register_criterion
 
 
-class MaxSim(nn.Module):
+class MaxSim_nneg(nn.Module):
     def __init__(self, temperature: float, reduction: str) -> None:
         super().__init__()
         self.temperature = temperature
@@ -26,9 +26,10 @@ class MaxSim(nn.Module):
         query = F.normalize(input=query, p=2.0, dim=-1, eps=1e-12)
         # [B, L, D] -> [B, L, D]
         pos_key = F.normalize(input=pos_key, p=2.0, dim=-1, eps=1e-12)
+        # print('pos_key', pos_key.shape)
         # [B, NG, L, D] -> [B, NG, L, D]
         neg_key = F.normalize(input=neg_key, p=2.0, dim=-1, eps=1e-12)
-
+        # print('neg_key', neg_key.shape)
         # [B. Lq, D] @ [B, D, Ld] -> [B, Lq, Ld]
         pos_logit = query @ pos_key.transpose(dim0=-2, dim1=-1)
         # [B, Ld] -> [B, 1, Ld]
@@ -43,22 +44,26 @@ class MaxSim(nn.Module):
             .sum(dim=-1, keepdim=True)/query_n_tokens
         # pos_logit = pos_logit.sum(dim=-1, keepdim=True)
         # print("pos_logit shape", pos_logit.shape)
-        # [B, L, D] -> [B, 1, L, D]
-        # query = query.unsqueeze(dim=1)
-        # [B, L, D] @ [B, D, L] -> [B, L, L]
+        # [B, Lq, D] -> [B, 1, Lq, D]
+        query = query.unsqueeze(dim=1)
+        # [B, 1, Lq, D] @ [B, N, D, Ld] -> [B, N, Lq, Ld]
         neg_logit = query @ neg_key.transpose(dim0=-2, dim1=-1)
-        # [B, L] -> [B, 1, L]
+        # print("neg_logit shape", neg_logit.shape)
+        # [B, N, Ld] -> [B, N, 1, Ld]
         neg_mask = neg_mask.unsqueeze(dim=-2).to(dtype=neg_logit.dtype)
         neg_mask = (1.0 - neg_mask) * -10000.0
-        # [B, L, L] + [B, 1, L] -> [B, L, L]
+        # [B, N, Lq, Ld] + [B, N, 1, Ld] -> [B, N, Lq, Ld]
         neg_logit = neg_logit + neg_mask
-        # [B, L, L] -> [B, L]
+        # print("neg_logit shape", neg_logit.shape)
+        # [B, N, Lq, Ld] -> [B, N, Lq]
         neg_logit = torch.max(input=neg_logit, dim=-1).values
+        # print("neg_logit shape", neg_logit.shape)
         # [B, Lq] -> [B, 1, Lq]
-        # query_mask = query_mask.unsqueeze(dim=1)
-        # [B, Lq] * [B, Lq] -> [B, 1]
+        query_mask = query_mask.unsqueeze(dim=1)
+        # print('query_mask', query_mask.shape)
+        # [B, N, Lq] * [B, 1, Lq] -> [B, N]
         neg_logit = (neg_logit * query_mask.to(dtype=neg_logit.dtype)) \
-            .sum(dim=-1, keepdim=True)/query_n_tokens
+            .sum(dim=-1, keepdim=False)/query_n_tokens
         # print("neg_logit shape", neg_logit.shape)
         # neg_logit = neg_logit.sum(dim=-1, keepdim=False)
 
@@ -149,9 +154,9 @@ class MaxSim(nn.Module):
 #         return loss
 
 
-@register_criterion(name="maxsim")
+@register_criterion(name="maxsim_nneg")
 def build_model(cfg) -> nn.Module:
-    return MaxSim(
+    return MaxSim_nneg(
         temperature=cfg.CRITERION.MAXSIM.TEMPERATURE,
         reduction=cfg.CRITERION.MAXSIM.REDUCTION,
     )

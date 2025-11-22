@@ -45,13 +45,13 @@ class FuseData(Dataset):
                 if k%2 == 0:
                     if k == 0:
                         text.append(f"[unused0] {item}")
-                    elif k == 2 or k == 4:
+                    elif k >= 2:
                         text.append(f"[unused1] {item}")
                 else:
                     formula.append(item)
-        print("text:", text)
+        # print("text:", text)
         
-        print("formula:", formula)
+        # print("formula:", formula)
         batch_enc_text = self.tokenizer_text(
             text=text,
             add_special_tokens=True,
@@ -67,10 +67,10 @@ class FuseData(Dataset):
             punct_ids.append(punct_id['input_ids'][0])
 
         input_ids = batch_enc_text['input_ids']
-        print("text ids:", input_ids)
-        print("text shape:", input_ids.shape)
-        print("text mask:", batch_enc_text["attention_mask"])
-        print("text mask shape:", batch_enc_text["attention_mask"].shape)
+        # print("text ids:", input_ids)
+        # print("text shape:", input_ids.shape)
+        # print("text mask:", batch_enc_text["attention_mask"])
+        # print("text mask shape:", batch_enc_text["attention_mask"].shape)
         punct_ids = torch.tensor(punct_ids, device=input_ids.device)
         punct_mask = torch.isin(input_ids, punct_ids)
         punct_mask = (~punct_mask).to(dtype=torch.int64)
@@ -83,13 +83,13 @@ class FuseData(Dataset):
             batch_first=True,
             padding_value=self.tokenizer_formula.word2idx["PAD"],
         )
-        print("formula ids:", src_formula)
-        print("formula shape:", src_formula.shape)
+        # print("formula ids:", src_formula)
+        # print("formula shape:", src_formula.shape)
         # [batch_size, n_heads, 1, seq_len]
         src_mask = torch.eq(input=src_formula, other=self.tokenizer_formula.word2idx["PAD"]) \
             .unsqueeze(dim=1).unsqueeze(dim=1).to(dtype=torch.bool)
-        print("formula mask:", src_mask)
-        print("formula mask shape:", src_mask.shape)
+        # print("formula mask:", src_mask)
+        # print("formula mask shape:", src_mask.shape)
         batch_enc_formula = {"src": src_formula, "src_mask": src_mask}
 
         

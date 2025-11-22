@@ -20,7 +20,7 @@ def compute_loss(
         attn_mask: Tensor,
         n_exprs: Optional[int],
 ) -> float:
-    print("postprocess is:", postprocess)
+    # print("postprocess is:", postprocess)
     if postprocess == "cls":
         embs = embs[:, 0, :].view(-1, n_exprs, embs.size(dim=-1))
 
@@ -47,8 +47,9 @@ def compute_loss(
 
         elif postprocess == "maxsim":
             _, L, D = embs.size()
-            print(embs.shape)
+            # print(embs.shape)
             embs = embs.view(-1, n_exprs, L, D)
+            # print('embs', embs.shape)
             attn_mask = attn_mask.view(-1, n_exprs, L)
             query = embs[:, 0, :, :]
             pos_key = embs[:, 1, :, :]
@@ -102,7 +103,7 @@ def train_epoch(
     for i, batch in enumerate(iterable=loader_tqdm):
         if i < init_batch:
             continue
-        print(i)
+        # print(i)
         token_ids = batch["input_ids"].to(device=device)
         attn_mask = batch["attention_mask"].to(device=device)
 
@@ -140,7 +141,7 @@ def train_epoch(
             attn_mask[batch_ids, eoe_ids] = True
             attn_mask[:, 0] = True
             attn_mask = (~attn_mask).long() #convert transformer mask to bert mask
-            print(attn_mask)
+            # print(attn_mask)
         else:
             raise ValueError(f"Invalid model class `{name}`")
 

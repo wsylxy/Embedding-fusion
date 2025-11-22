@@ -24,37 +24,27 @@ def compute_loss(
 ) -> float:
     _, tL, tD = text_embs.size()
     _, fL, fD = formula_embs.size()
-    # print('text_embs.shape', text_embs.shape)
-    # print('formula_embs.shape', formula_embs.shape)
     assert text_embs.shape[0]==formula_embs.shape[0]
     
     #find q, pos, neg of text
     text_embs = text_embs.view(-1, n_exprs, tL, tD)
     text_attn_mask = text_attn_mask.view(-1, n_exprs, tL)
-    B = text_embs.shape[0]
     text_q = text_embs[:, 0, :, :]
     text_pos = text_embs[:, 1, :, :]
-    text_neg = text_embs[:, 2:, :, :]
-    text_neg = text_neg.reshape(-1, tL, tD)
-    # print('text_neg.shape', text_neg.shape)
+    text_neg = text_embs[:, 2, :, :]
     text_q_mask = text_attn_mask[:, 0, :]
     text_pos_mask = text_attn_mask[:, 1, :]
-    text_neg_mask = text_attn_mask[:, 2:, :]
-    text_neg_mask = text_neg_mask.reshape(-1, tL)
-    # print('text_neg_mask.shape', text_neg_mask.shape)
+    text_neg_mask = text_attn_mask[:, 2, :]
+    
     #find q, pos, neg of formula
     formula_embs = formula_embs.view(-1, n_exprs, fL, fD)
     formula_attn_mask = formula_attn_mask.view(-1, n_exprs, fL)
     formula_q = formula_embs[:, 0, :, :]
     formula_pos = formula_embs[:, 1, :, :]
-    formula_neg = formula_embs[:, 2:, :, :]
-    formula_neg = formula_neg.reshape(-1, fL, fD)
-    # print('formula_neg.shape', formula_neg.shape)
+    formula_neg = formula_embs[:, 2, :, :]
     formula_q_mask = formula_attn_mask[:, 0, :]
     formula_pos_mask = formula_attn_mask[:, 1, :]
-    formula_neg_mask = formula_attn_mask[:, 2:, :]
-    formula_neg_mask = formula_neg_mask.reshape(-1, fL)
-    # print('formula_neg_mask.shape', formula_neg_mask.shape)
+    formula_neg_mask = formula_attn_mask[:, 2, :]
     # print(text_q.dtype)
     # print(formula_q.dtype)
     # print('text shape:', text_q.shape)
@@ -81,11 +71,6 @@ def compute_loss(
     # print('text shape:', text_neg.shape)
     # print('formula shape:', formula_neg.shape)
     fused_neg, mask_neg = model_fuse(H_t=text_neg, H_m=formula_neg, mask_t=text_neg_mask, mask_m=formula_neg_mask, normalize=True)
-    _, L, D = fused_neg.size()
-    fused_neg = fused_neg.reshape(B, -1, L, D)          # [B, N, L, D]
-    mask_neg  = mask_neg.reshape(B, -1, L)              # [B, N, L]
-    # print('fused_neg.shape', fused_neg.shape)
-    # print('mask_neg.shape', mask_neg.shape)
     # mask_neg = torch.cat((text_neg_mask, formula_neg_mask), dim=1)
     assert fused_neg.size(1) == mask_neg.size(1)
     assert fused_neg.shape[0] == mask_neg.shape[0]
