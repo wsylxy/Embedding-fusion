@@ -97,11 +97,11 @@ def main() -> None:
 
     # model_formula = build_model(cfg=cfg)
 
-    # 冻结 BERT
+    # Freeze BERT
     for param in model_text.parameters():
         param.requires_grad = False
 
-    # 冻结 Transformer
+    # Freeze Transformer
     for param in model_formula.parameters():
         param.requires_grad = False
 
@@ -139,3 +139,4 @@ def main() -> None:
 
 if __name__ == '__main__':
     main()
+
