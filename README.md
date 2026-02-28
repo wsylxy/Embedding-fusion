@@ -14,6 +14,8 @@ python train_model.py --cfg cfgs/models/mir_enc.yaml --dataset cfgs/datasets/mat
 ## Training of fusion model
 To train the fusion model
 
+Edit path of training dataset and in ```cfgs/datasets/math_enc_dataset.yaml```, the training dataset is contrastive learning dataset containing both context and formulas, the format needs to be [CTX1] [FOM1] [CTX2] [FOM2] [CTX3] [FOM3] .
+
 Edit "MODEL.NAME" to be "fuse_text" in ```cfgs/models/math_enc_dataset.yaml```
 
 Edit "CKPT.LAST" to be path of pretrained formula encoder in ```cfgs/models/mir_enc.yaml```
