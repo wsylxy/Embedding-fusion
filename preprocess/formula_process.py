@@ -68,7 +68,7 @@ def is_number(s):
         return False
 
 voc_list = []
-data_path = './data_processing'
+data_path = './vocabulary'
 with open(f'{data_path}/voc_list_new.txt', 'r', encoding='utf-8') as file:
     for line in file:
         voc_list.append(line.split('\t')[0])
@@ -679,9 +679,11 @@ def variables_unification(tokens): #optional: keep original or id or id1, id2
                 tokens[i] = vocab_dict[tokens[i]]
     return tokens
 
+##################### a DEMO to use this preprocess #########################
 tok = LatexTokenizer()
 formula = '\\frac{b}{c} \\sqrt{x}'
 formula = correct_sin(formula.strip().strip('.'))
-formula = tok.standarization(formula)
-print(formula)
+formula_processed = tok.standarization(formula)
+print(formula_processed)
+#############################################################################
 
