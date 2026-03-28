@@ -29,6 +29,16 @@ class CrossAttnfuse_text(nn.Module):
             nn.Linear(bottleneck, 1),
         )
         self.out = nn.Linear(dim, out_dim)
+        self._init_weights()
+
+    def _init_weights(self):
+        nn.init.xavier_uniform_(self.delta_proj.weight)
+        nn.init.zeros_(self.delta_proj.bias)
+        nn.init.xavier_uniform_(self.gate_tok[0].weight)
+        nn.init.zeros_(self.gate_tok[0].bias)
+
+        nn.init.zeros_(self.gate_tok[2].weight)        # shape [1, dim]
+        nn.init.constant_(self.gate_tok[2].bias, -5.0) # sigmoid(-5)≈0.0067
   
     def forward(self, H_t, H_m, mask_t=None, mask_m=None, normalize=True):
         # cross-attn
