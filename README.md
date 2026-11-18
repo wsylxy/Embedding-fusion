@@ -6,7 +6,7 @@ To train the formula encoder
 
 Edit path of training dataset and in ```cfgs/datasets/math_enc_dataset.yaml```, the training dataset needs to be preprocessed formula dataset for contrastive learning. 
 
-(Due to data lost, the preprocessed formula dataset is not available now, we are trying to recover the dataset)
+(Due to data lost, the preprocessed dataset and checkpoint is not currently available, we are trying to recover it)
 
 Here we provide the formula preprocessing code in ```preprocess/formula_process.py```, which can be used to process MathML formulas, the format of dataset needs to be in contrastive learning data format [QUERY_FORMULA] [POS_FORMULA] [NEG_FORMULA1] [NEG_FORMULA2] [NEG_FORMULA3]
 
