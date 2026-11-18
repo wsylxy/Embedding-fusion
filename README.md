@@ -4,7 +4,11 @@ This code contains the training code of MaRF (Mathematical Reresentative-level F
 ## Training of formula encoder
 To train the formula encoder
 
-Edit path of training dataset and in ```cfgs/datasets/math_enc_dataset.yaml```, the training dataset needs to be preprocessed formula dataset for contrastive learning.
+Edit path of training dataset and in ```cfgs/datasets/math_enc_dataset.yaml```, the training dataset needs to be preprocessed formula dataset for contrastive learning. 
+
+(Due to data lost, the preprocessed formula dataset is not available now, we are trying to recover the dataset)
+
+Here we provide the formula preprocessing code in ```preprocess/formula_process.py```, which can be used to process MathML formulas, the format of dataset needs to be in contrastive learning data format [QUERY_FORMULA] [POS_FORMULA] [NEG_FORMULA1] [NEG_FORMULA2] [NEG_FORMULA3]
 
 Edit "MODEL.NAME" to be "math_enc_old" in ```cfgs/models/math_enc_dataset.yaml```
 ```
